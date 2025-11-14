@@ -28,12 +28,12 @@ def train_closed_set(config: dict[str, Any] | TrainingConfig) -> None:
     trainer_cfg = config["trainer"]
 
     train_loader = build_dataloader(
-        name=data_cfg.get("dataset_name", "gorilla_faces"),
+        name=data_cfg.get("dataset_name", "animal_faces"),
         split="train",
         config=data_cfg,
     )
     val_loader = build_dataloader(
-        name=data_cfg.get("dataset_name", "gorilla_faces"),
+        name=data_cfg.get("dataset_name", "animal_faces"),
         split="val",
         config=data_cfg,
     )

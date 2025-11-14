@@ -1,8 +1,8 @@
-name: gorilla-closed-set
+name: animal-closed-set
 
 data:
-  dataset_name: gorilla_faces
-  root: data/processed/gorilla_faces
+  dataset_name: animal_faces
+  root: data/processed/animal_faces
   batch_size: 32
   num_workers: 4
   image_size: 224

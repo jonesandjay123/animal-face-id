@@ -1,4 +1,4 @@
-"""Dataset for cropped gorilla faces stored in class-labelled folders."""
+"""Dataset for cropped animal faces stored in class-labelled folders."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from PIL import Image
 from torch.utils.data import Dataset
 
 
-class GorillaFaceDataset(Dataset):
-    """Minimal dataset wrapper around gorilla face crops."""
+class AnimalFaceDataset(Dataset):
+    """Minimal dataset wrapper around animal face crops."""
 
     def __init__(self, root: str | Path, split: str, transform: Callable | None = None) -> None:
         self.root = Path(root)
@@ -54,3 +54,4 @@ class GorillaFaceDataset(Dataset):
     def classes(self) -> Sequence[str]:
         """List of class labels in canonical order."""
         return tuple(self.class_to_idx.keys())
+

@@ -1,4 +1,4 @@
-"""Backbone network definitions for gorilla face embeddings."""
+"""Backbone network definitions for animal face embeddings."""
 
 from __future__ import annotations
 

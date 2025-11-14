@@ -8,7 +8,7 @@ from typing import Any
 import yaml
 from torch.utils.data import DataLoader
 
-from .gorilla_faces import GorillaFaceDataset
+from .animal_faces import AnimalFaceDataset
 from .transforms import build_transforms
 
 
@@ -19,12 +19,12 @@ def load_dataset_metadata(registry_path: str) -> dict[str, Any]:
 
 
 def _instantiate_dataset(name: str, split: str, config: dict[str, Any]) -> Any:
-    if name != "gorilla_faces":
-        msg = f"Unknown dataset '{name}'. Only 'gorilla_faces' is scaffolded."
+    if name != "animal_faces":
+        msg = f"Unknown dataset '{name}'. Only 'animal_faces' is scaffolded."
         raise ValueError(msg)
 
     transforms = build_transforms(stage=split, config=config)
-    return GorillaFaceDataset(
+    return AnimalFaceDataset(
         root=config["root"],
         split=split,
         transform=transforms,

@@ -34,7 +34,7 @@ def load_config(path: str) -> TrainingConfig:
     """Load a structured config object from disk."""
     payload: dict[str, Any] = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     return TrainingConfig(
-        name=payload.get("name", "gorilla-face-id"),
+        name=payload.get("name", "animal-face-id"),
         data=payload.get("data", {}),
         model=payload.get("model", {}),
         trainer=payload.get("trainer", {}),

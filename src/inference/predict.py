@@ -62,7 +62,7 @@ def predict_image(image_path: str, config: dict[str, Any] | TrainingConfig) -> d
 
 
 def build_argparser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Predict gorilla ID for a cropped face.")
+    parser = argparse.ArgumentParser(description="Predict animal ID for a cropped face.")
     parser.add_argument("--image", required=True, help="Path to the image to evaluate.")
     parser.add_argument("--config", default="configs/train_closed_set.yaml", help="Path to YAML config.")
     return parser

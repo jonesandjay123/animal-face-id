@@ -1,9 +1,9 @@
-# Gorilla Face Identification POC Plan
+# Animal Face Identification POC Plan
 
 ## Technical Requirements Extracted from Context
 - Target hardware is a local Windows workstation with an NVIDIA RTX 5080; leverage PyTorch + CUDA for rapid iteration.
-- Pipeline must detect gorilla faces (species filter + face localization), classify known individuals (closed set), flag unknowns (open set), and enroll new identities safely.
-- Baseline should start from cropped gorilla face datasets (e.g., Kaggle `smiles28/gorillas`, BristolGorillas2020) before adding detection.
+- Pipeline must detect animal faces (species filter + face localization), classify known individuals (closed set), flag unknowns (open set), and enroll new identities safely.
+- Baseline should start from cropped animal face datasets before adding detection.
 - Downstream system must support incremental gallery updates without retraining the entire network; embeddings stored for k-NN retrieval.
 - Open-set logic requires distance-thresholding on embeddings plus ROC-style calibration to balance FPR/FNR.
 - Enrollment must accumulate repeated unknown embeddings, cluster them (e.g., DBSCAN) and only create a new ID when clusters exceed a minimum sample count (≈10) and optionally pass human verification.
@@ -11,7 +11,7 @@
 - Keep raw datasets out of version control (use `/data` as untracked storage).
 
 ## Project Goals & Success Criteria
-- Deliver a reproducible POC that, on local GPU, can ingest gorilla face images and return predicted individual IDs or “Unknown.”
+- Deliver a reproducible POC that, on local GPU, can ingest animal face images and return predicted individual IDs or "Unknown."
 - Achieve ≥85% Top-1 accuracy on a held-out closed-set validation split built from public datasets.
 - Demonstrate open-set rejection with ≤1% false accept rate at ≥70% true accept rate for known individuals (tunable).
 - Implement automated unknown clustering that proposes new IDs only after sufficient evidence; log enrollment events.
@@ -19,8 +19,8 @@
 
 ## Problem Breakdown
 1. **Input Normalization** – Collect datasets, clean labels, create train/val/test splits, and standardize image crops/resolution.
-2. **Detection & Species Filtering** – (Phase 0/extension) Detect gorilla faces using YOLOv7/YOLOv8 tuned on BristolGorillas2020 bounding boxes.
-3. **Embedding Backbone** – Fine-tune a lightweight CNN/ViT (e.g., ResNet-18, ViT-S/16 from GorillaVision) with metric-learning loss (Triplet, ArcFace) to produce 128–256D embeddings.
+2. **Detection & Species Filtering** – (Phase 0/extension) Detect animal faces using YOLOv7/YOLOv8 or specialized detectors.
+3. **Embedding Backbone** – Fine-tune a lightweight CNN/ViT (e.g., ResNet-18, ViT-S/16) with metric-learning loss (Triplet, ArcFace) to produce 128–256D embeddings.
 4. **Closed-Set ID** – Maintain gallery vectors per individual; perform cosine similarity / k-NN; report Top-k predictions.
 5. **Open-Set Thresholding** – Model distance distributions for positive vs negative pairs; learn threshold τ; optionally calibrate with logistic regression score.
 6. **Unknown Pool & Clustering** – Buffer embeddings labeled unknown, run DBSCAN/HDBSCAN to form clusters; ensure min samples & temporal diversity.
@@ -39,7 +39,7 @@
    - `data/raw/` for original datasets; `data/processed/` for resized crops and metadata parquet/JSON.
    - Dataset registry JSON describing splits, augmentation configs.
 2. **Model Layer**
-   - Backbone: Torchvision ResNet-18 or ViT-S/16 (from GorillaVision) fine-tuned with Triplet + ArcFace hybrid loss.
+   - Backbone: Torchvision ResNet-18 or ViT-S/16 fine-tuned with Triplet + ArcFace hybrid loss.
    - Optimizer: AdamW with cosine LR schedule; mixed precision training (torch.cuda.amp) for speed on 5080.
 3. **Embedding Store**
    - Use FAISS (CPU) or torch.kNNGraph for retrieval; gallery stored in `artifacts/gallery.pkl`.

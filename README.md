@@ -1,14 +1,14 @@
-# Gorilla Face Identification POC
+# Animal Face Identification POC
 
 ## Overview
-- Proof-of-concept pipeline for gorilla face identification with closed-set baseline, open-set rejection, and future enrollment workflows.
+- Proof-of-concept pipeline for animal face identification with closed-set baseline, open-set rejection, and future enrollment workflows.
 - Designed for local experimentation on a Windows workstation with NVIDIA RTX 5080; code targets PyTorch 2.x.
-- Builds on cropped gorilla face datasets (Kaggle `smiles28/gorillas`, BristolGorillas2020) before adding detection/tracking.
+- Builds on cropped animal face datasets before adding detection/tracking.
 
 ## Repository Layout
 - `docs/` – context (`context-raw.md`), project plan, plus `notes/` and `research/` placeholders for experiments and literature.
 - `src/config/` – YAML-driven config schema (see `configs/train_closed_set.yaml` for defaults).
-- `src/datasets/` – Gorilla face dataset wrapper, transform builder, and dataloader registry.
+- `src/datasets/` – Animal face dataset wrapper, transform builder, and dataloader registry.
 - `src/models/` – ResNet18 embedding backbone scaffold.
 - `src/training/` – Closed-set training loop skeleton (`train.py`) and evaluation placeholder.
 - `src/inference/` – k-NN gallery helper plus `predict.py` CLI scaffold.
@@ -17,7 +17,7 @@
 
 ## Current Status (Phase 1 Skeleton)
 - ResNet18 embedding wrapper implemented with L2-normalized outputs; classifier head defined inside training loop.
-- Gorilla face dataset loader expects `data/processed/gorilla_faces/<split>/<gorilla_id>/*.jpg|png` layout.
+- Animal face dataset loader expects `data/processed/animal_faces/<split>/<individual_id>/*.jpg|png` layout.
 - Training loop and validation pass are stubbed with TODOs; checkpoints saved to `artifacts/closed_set_skeleton.pt`.
 - k-NN inference pipeline loads gallery index (`artifacts/gallery_index.pkl`) built outside this scaffold; prediction CLI prints nearest IDs.
 - Config loader now produces a `TrainingConfig` dataclass for reuse across training/inference scripts.
@@ -55,8 +55,8 @@ If you're on Windows with an NVIDIA GPU (e.g., RTX 5080), using **WSL2 with Ubun
 
 1. **Navigate to Project Directory**:
    ```bash
-   # If your repo is at C:\Users\jones\Downloads\ape-face-id
-   cd /mnt/c/Users/jones/Downloads/ape-face-id
+   # If your repo is at C:\Users\jones\Downloads\animal-face-id
+   cd /mnt/c/Users/jones/Downloads/animal-face-id
    ```
 
 2. **Install Python and venv** (if needed):
@@ -104,7 +104,7 @@ If you're on Windows with an NVIDIA GPU (e.g., RTX 5080), using **WSL2 with Ubun
 ```bash
 # 1. Open WSL2 Ubuntu terminal (in Cursor or Windows Terminal)
 # 2. Navigate to project
-cd /mnt/c/Users/jones/Downloads/ape-face-id
+cd /mnt/c/Users/jones/Downloads/animal-face-id
 
 # 3. Activate venv
 source .venv/bin/activate
@@ -195,8 +195,8 @@ python -m src.training.train --config configs/train_closed_set.yaml
 
 </details>
 2. **Datasets**
-   - Download gorilla face crops (e.g., Kaggle `smiles28/gorillas`).
-   - Arrange into `data/processed/gorilla_faces/{train,val,test}/{gorilla_id}/image.jpg`.
+   - Download animal face crop datasets.
+   - Arrange into `data/processed/animal_faces/{train,val,test}/{individual_id}/image.jpg`.
    - Update `data.num_classes` in `configs/train_closed_set.yaml` to match the individual count.
 3. **Configuration**
    - Copy `configs/train_closed_set.yaml` and adjust paths, batch sizes, embedding dimensions, etc., as needed.
