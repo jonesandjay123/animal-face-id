@@ -23,9 +23,45 @@
 - Config loader now produces a `TrainingConfig` dataclass for reuse across training/inference scripts.
 
 ## Getting Started
-1. **Environment**
-   - Python 3.11 with PyTorch 2.x + CUDA 12 toolchain.
-   - Install dependencies (example): `pip install torch torchvision scikit-learn pillow pyyaml joblib`.
+1. **Environment Setup**
+   - **Python Version**: Python 3.11 (recommended) or 3.10+
+   - **Create Virtual Environment** (strongly recommended):
+     ```bash
+     # Create venv
+     python -m venv venv
+     
+     # Activate venv
+     # Windows PowerShell:
+     .\venv\Scripts\Activate.ps1
+     # Windows CMD:
+     .\venv\Scripts\activate.bat
+     # macOS / Linux:
+     source venv/bin/activate
+     ```
+   - **Install PyTorch**:
+     - **Windows with NVIDIA GPU (e.g., RTX 5080)**:
+       ```bash
+       # Install PyTorch with CUDA 12.x support
+       pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+       ```
+     - **macOS (Apple Silicon M1/M2/M3+)**:
+       ```bash
+       # Install PyTorch with MPS (Metal Performance Shaders) support
+       pip install torch torchvision torchaudio
+       ```
+     - **macOS (Intel) or CPU-only**:
+       ```bash
+       pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+       ```
+   - **Install Other Dependencies**:
+     ```bash
+     pip install -r requirements.txt
+     ```
+   - **Verify GPU/Acceleration Availability**:
+     ```bash
+     # Check CUDA (Windows/Linux) or MPS (macOS Apple Silicon)
+     python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'MPS available: {torch.backends.mps.is_available()}'); print(f'Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"MPS\" if torch.backends.mps.is_available() else \"CPU\"}')"
+     ```
 2. **Datasets**
    - Download gorilla face crops (e.g., Kaggle `smiles28/gorillas`).
    - Arrange into `data/processed/gorilla_faces/{train,val,test}/{gorilla_id}/image.jpg`.
