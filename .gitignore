@@ -16,6 +16,8 @@ ENV/
 *.pt
 *.ckpt
 *.safetensors
+*.pkl
+*.h5
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -47,13 +49,26 @@ wheels/
 .DS_Store
 
 # Project-specific
-data/
 artifacts/
 logs/
 runs/
 outputs/
 checkpoints/
 wandb/
+
+# Dataset-specific
+# Ignore raw data and processed outputs, but keep annotations
+data/chimpanzee_faces/raw/
+data/chimpanzee_faces/processed/
+!data/chimpanzee_faces/annotations/
+!data/chimpanzee_faces/annotations/*.txt
+
+# Data archives
+*.mat
+*.zip
+*.tar
+*.tar.gz
+*.tgz
 
 # Config overrides (optional - uncomment if needed)
 # configs/local_*.yaml
