@@ -53,6 +53,84 @@ This project is organized into a series of detailed guides. Start with setting u
 
 ---
 
+## 🚀 First-Time Setup: Get Started in 5 Steps
+
+**New to this repository?** Follow these steps to set up your environment and run the GUI application:
+
+### Step 1: Create a Virtual Environment
+
+**On Linux/macOS/WSL:**
+```bash
+python3 -m venv .venv
+```
+
+**On Windows (Command Prompt or PowerShell):**
+```cmd
+python -m venv .venv
+```
+
+### Step 2: Activate the Virtual Environment
+
+**On Linux/macOS/WSL:**
+```bash
+source .venv/bin/activate
+```
+
+**On Windows (Command Prompt):**
+```cmd
+.venv\Scripts\activate.bat
+```
+
+**On Windows (PowerShell):**
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+### Step 3: Upgrade pip
+```bash
+pip install --upgrade pip
+```
+
+### Step 4: Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### Step 5: Run the GUI Application
+```bash
+python tools/chimp_gui_app.py
+```
+
+### Step 6: Open in Browser
+Open your browser and navigate to:
+```
+http://127.0.0.1:7860
+```
+
+🎉 **You're ready to go!** The GUI allows you to identify chimpanzees and enroll new individuals.
+
+> **Note:** For the GUI to work properly, make sure you have obtained the pre-trained model and dataset (see section below).
+
+---
+
+## Quick Start: Using Pre-trained Models and Datasets
+
+**Don't want to train from scratch?** You can get started faster by obtaining pre-prepared resources:
+
+### Option A: Get Pre-trained Model (artifacts/)
+- **Contact Jones** to request the trained model artifacts ZIP file
+- Extract and overwrite the `artifacts/` directory
+- This includes the best checkpoint (`chimp-min10-resnet50-arcface-full_best.pt`) and gallery index
+
+### Option B: Get Dataset (data/)
+You have two options for the chimpanzee dataset:
+1. **Download directly** from the official source: [cvjena/chimpanzee_faces](https://github.com/cvjena/chimpanzee_faces)
+2. **Contact Jones** to request the prepared dataset ZIP file for easier setup
+
+After obtaining either or both, you can skip directly to evaluation/inference steps below.
+
+---
+
 ## How to Run: The Full Workflow
 
 Here is the complete sequence of commands to go from a fresh clone to making a prediction.
@@ -122,11 +200,14 @@ python tools/build_chimp_index_from_annotations.py \
 ```
 .
 ├── artifacts/              # Output folder for models (.pt) and logs (.csv)
+│                           # 💡 TIP: Contact Jones for pre-trained model ZIP to skip training
 ├── configs/                # YAML configuration files for training runs
 ├── data/
 │   ├── chimpanzee_faces/
 │   │   ├── annotations/    # Annotation files and generated splits.json
 │   │   └── raw/            # Location for the downloaded image dataset (ignored by Git)
+│   │                       # 💡 TIP: Get from https://github.com/cvjena/chimpanzee_faces
+│   │                       #        or contact Jones for prepared dataset ZIP
 ├── docs/                   # Detailed documentation guides
 ├── scripts/                # Helper scripts (e.g., for preparing data splits)
 ├── src/                    # Main source code
