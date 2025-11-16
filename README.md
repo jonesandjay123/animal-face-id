@@ -12,6 +12,29 @@ The current implementation focuses on identifying individual chimpanzees using t
 
 ---
 
+## Project Status: High-Performance Model Trained
+
+**As of November 2025, a high-performance chimpanzee recognition model has been successfully trained.**
+
+- **Model:** `ResNet50` backbone with an `ArcFace` head.
+- **Training:** Full run on the `min10` dataset (200 epochs, config `configs/train_chimp_min10_resnet50_arc_full.yaml`).
+- **Result:** Best checkpoint: `artifacts/chimp-min10-resnet50-arcface-full_best.pt`. Ready for evaluation and inference.
+
+---
+
+## Conceptual Overview
+
+This project involves several key deep learning concepts. For a detailed explanation of the project's architecture and answers to common questions, please read our new guide:
+
+**➡️ [Conceptual Overview & FAQ](./docs/CONCEPTS.md)**
+
+This guide answers questions such as:
+- How does the model "remember" new faces without full retraining?
+- What is the difference between the GPU's role in training vs. the CPU's role in inference?
+- Why is this model a "chimpanzee expert" and what are its limitations?
+
+---
+
 ## Documentation
 
 This project is organized into a series of detailed guides. Start with setting up your environment and follow the steps in order.
@@ -61,6 +84,15 @@ python -m src.inference.build_gallery --config configs/train_chimp_min10_resnet5
 # 2. Predict the ID of a new image
 python -m src.inference.predict --image /path/to/your/chimp_face.png --config configs/train_chimp_min10_resnet50_arc_full.yaml --device cpu
 ```
+
+### 4. Final Evaluation on Test Split
+```bash
+python tools/run_final_eval.py \
+  --config configs/train_chimp_min10_resnet50_arc_full.yaml \
+  --ckpt artifacts/chimp-min10-resnet50-arcface-full_best.pt \
+  --device cuda
+```
+Outputs go to `artifacts/final_eval/` and `FINAL_EVAL_REPORT.md`.
 
 ---
 
