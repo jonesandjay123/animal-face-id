@@ -20,6 +20,11 @@ The current implementation focuses on identifying individual chimpanzees using t
 - **Training:** Full run on the `min10` dataset (200 epochs, config `configs/train_chimp_min10_resnet50_arc_full.yaml`).
 - **Result:** Best checkpoint: `artifacts/chimp-min10-resnet50-arcface-full_best.pt`. Ready for evaluation and inference.
 
+## Dataset Notes (why “min10”)
+- `annotations_merged_all.txt`: 7,187 images, 102 IDs, includes classes with very few samples.
+- `annotations_merged_min10.txt`: 7,150 images, 87 IDs, every ID has ≥10 images.
+- We train/evaluate on **min10** to avoid extremely low-sample classes, improve class balance, and stabilize ArcFace training/eval. Use `annotations_merged_all.txt` only if you explicitly want the long-tail classes (expect more imbalance and weaker per-ID metrics).
+
 ---
 
 ## Conceptual Overview
@@ -99,6 +104,16 @@ Outputs go to `artifacts/final_eval/` and `FINAL_EVAL_REPORT.md`.
 python tools/chimp_gui_app.py
 ```
 Default config/ckpt from above; uses index at `artifacts/index/chimp_index` if present. Identify tab shows model + gallery top-k; Enroll tab adds new individuals to the index.
+
+### 6. Auto-build gallery index from annotations
+```bash
+python tools/build_chimp_index_from_annotations.py \
+  --max-per-id 10 \
+  --device cuda \
+  --prefix artifacts/index/chimp_min10_auto
+```
+- Auto-picks the min10 annotation, uses train+val as gallery (test held out), caps per-ID samples, batches embeddings with the full model.
+- Saves index to `artifacts/index/chimp_min10_auto_*` and entries CSV; GUI will auto-load this index if present.
 
 ---
 

@@ -13,8 +13,9 @@ from src.inference.inference_core import infer_single_image, load_model_from_con
 
 def _cosine_similarity(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     a_norm = a / (np.linalg.norm(a, axis=1, keepdims=True) + 1e-8)
-    b_norm = b / (np.linalg.norm(b, keepdims=True) + 1e-8)
-    return np.dot(a_norm, b_norm)
+    b = b.reshape(b.shape[0], -1) if b.ndim > 1 else b.reshape(1, -1)
+    b_norm = b / (np.linalg.norm(b, axis=1, keepdims=True) + 1e-8)
+    return np.dot(a_norm, b_norm.T)
 
 
 class SimpleIndex:

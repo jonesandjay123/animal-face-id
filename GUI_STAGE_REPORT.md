@@ -5,6 +5,7 @@
 - `src/inference/index_store.py` — lightweight cosine index (save/load/query/add/build from folder).
 - `tools/chimp_index_cli.py` — CLI to build/load/update index (`build`, `add`, `stats`).
 - `tools/chimp_gui_app.py` — Gradio MVP (Identify / Enroll tabs).
+- `tools/build_chimp_index_from_annotations.py` — automatically build gallery index from annotations/splits.
 - `requirements.txt` — added `gradio`.
 
 ## How to run (from repo root)
@@ -63,3 +64,20 @@ python tools/chimp_index_cli.py --prefix artifacts/index/chimp_index stats
 ```bash
 python tools/chimp_gui_app.py
 ```
+
+## Auto index from annotations (preferred gallery build)
+```bash
+python tools/build_chimp_index_from_annotations.py \
+  --max-per-id 10 \
+  --device cuda \
+  --prefix artifacts/index/chimp_min10_auto
+```
+- Picks min10 annotation automatically, uses train+val splits for gallery (test held out), caps per ID, batches embeddings via the full model+ckpt.
+- Saves index to `artifacts/index/chimp_min10_auto_*` and an entries CSV.
+- GUI auto-loads an existing index (prefers `chimp_min10_auto` prefix); if not found, falls back to classifier-only mode with a clear message.
+
+## From clean clone (short path)
+1. Train (per TRAINING docs/configs) and produce best ckpt (already present in artifacts for the full run).
+2. Build index from annotations (one command above).
+3. Launch GUI: `python tools/chimp_gui_app.py`
+4. Identify tab will auto-use the index if present; Enroll tab adds to the same index and saves it.

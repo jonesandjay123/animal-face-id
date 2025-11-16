@@ -22,7 +22,10 @@ from src.inference.index_store import SimpleIndex, add_individual
 
 DEFAULT_CONFIG = "configs/train_chimp_min10_resnet50_arc_full.yaml"
 DEFAULT_CKPT = "artifacts/chimp-min10-resnet50-arcface-full_best.pt"
-DEFAULT_INDEX_PREFIX = "artifacts/index/chimp_index"
+DEFAULT_INDEX_CANDIDATES = [
+    "artifacts/index/chimp_min10_auto",
+    "artifacts/index/chimp_index",
+]
 
 
 class AppState:
@@ -34,7 +37,26 @@ class AppState:
 STATE = AppState()
 
 
-def _load_index(prefix: str = DEFAULT_INDEX_PREFIX) -> SimpleIndex | None:
+def _find_existing_index() -> str | None:
+    """Return a prefix for an existing index if found, checking common candidates."""
+    for cand in DEFAULT_INDEX_CANDIDATES:
+        emb_path = Path(cand + "_embeddings.npy")
+        meta_path = Path(cand + "_meta.json")
+        if emb_path.exists() and meta_path.exists():
+            return cand
+    # Fallback: first matching chimp_min10_auto*.npy
+    auto = list(Path("artifacts/index").glob("chimp_*_auto*_embeddings.npy"))
+    if auto:
+        prefix = str(auto[0]).replace("_embeddings.npy", "")
+        meta = Path(prefix + "_meta.json")
+        if meta.exists():
+            return prefix
+    return None
+
+
+def _load_index(prefix: str | None) -> SimpleIndex | None:
+    if prefix is None:
+        return None
     emb_path = Path(prefix + "_embeddings.npy")
     meta_path = Path(prefix + "_meta.json")
     if emb_path.exists() and meta_path.exists():
@@ -47,22 +69,30 @@ def _load_index(prefix: str = DEFAULT_INDEX_PREFIX) -> SimpleIndex | None:
 
 def init_model(config: str = DEFAULT_CONFIG, ckpt: str = DEFAULT_CKPT, device: str = "cuda") -> str:
     STATE.model_bundle = load_model_from_config(config, ckpt, device=device)
-    STATE.index = _load_index()
-    msg = f"Model loaded from {ckpt} on {device}. "
+    prefix = _find_existing_index()
+    STATE.index = _load_index(prefix)
+    msg = f"Model loaded from {ckpt} on {STATE.model_bundle['device']}. "
     if STATE.index and STATE.index.size > 0:
-        msg += f"Index loaded with {STATE.index.size} embeddings."
+        unique_ids = len(set(STATE.index.labels))
+        msg += f"Index loaded ({STATE.index.size} embeddings, {unique_ids} IDs) from prefix: {prefix}."
     else:
-        msg += "No index found; build one in Enroll tab."
+        msg += "No index found; build or enroll to add a gallery."
     return msg
 
 
 def identify(image, topk: int):
-    if STATE.model_bundle is None:
-        return "Model not loaded yet.", None, None
-    if image is None:
-        return "Please upload an image.", None, None
+    """Identify a single uploaded face.
 
-    # Save to temp and call path-based inference
+    Returns:
+    - status string
+    - model_topk: list of dicts with rank, id, prob (model classifier top-k on logits/probs)
+    - gallery_topk: list of dicts with rank, id, similarity (gallery index cosine results)
+    """
+    if STATE.model_bundle is None:
+        return "Model not loaded yet.", [], []
+    if image is None:
+        return "Please upload an image.", [], []
+
     tmp_path = Path(".__tmp_upload.png")
     image.save(tmp_path)
     try:
@@ -71,17 +101,22 @@ def identify(image, topk: int):
         if tmp_path.exists():
             tmp_path.unlink()
 
-    clf_rows = []
-    for rank, (label, score) in enumerate(zip(result["topk_labels"], result["topk_scores"]), start=1):
-        clf_rows.append({"rank": rank, "label": label, "score": float(score)})
+    # Model classifier top-k (classes/IDs + probabilities from logits)
+    model_topk = [
+        [rank, label, float(score)]
+        for rank, (label, score) in enumerate(zip(result["topk_labels"], result["topk_scores"]), start=1)
+    ]
 
+    # Gallery index top-k (cosine similarity)
     if STATE.index is None or STATE.index.size == 0:
-        gallery_rows = [{"rank": "-", "label": "No index loaded", "score": "-"}]
+        gallery_topk = [["-", "No index loaded", "-"]]
+        status = "No index loaded; showing classifier top-k only."
     else:
         matches = STATE.index.query(result["embedding"], topk=topk)
-        gallery_rows = [{"rank": i + 1, "label": m["label"], "score": float(m["score"])} for i, m in enumerate(matches)]
+        gallery_topk = [[i + 1, m["label"], float(m["score"])] for i, m in enumerate(matches)]
+        status = "Done"
 
-    return "Done", clf_rows, gallery_rows
+    return status, model_topk, gallery_topk
 
 
 def enroll(name: str, files: List[Any], aggregate: bool):
@@ -127,8 +162,8 @@ def build_interface():
             topk_in = gr.Slider(1, 5, value=5, step=1, label="Top-k")
             identify_btn = gr.Button("Identify")
             msg = gr.Textbox(label="Status")
-            clf_table = gr.Dataframe(headers=["rank", "label", "score"], label="Model top-k", interactive=False)
-            gallery_table = gr.Dataframe(headers=["rank", "label", "score"], label="Gallery (index) top-k", interactive=False)
+            clf_table = gr.Dataframe(headers=["rank", "id", "prob"], label="Model top-k", interactive=False, datatype=["number", "str", "number"])
+            gallery_table = gr.Dataframe(headers=["rank", "id", "similarity"], label="Gallery (index) top-k", interactive=False, datatype=["number", "str", "number"])
             identify_btn.click(identify, inputs=[img, topk_in], outputs=[msg, clf_table, gallery_table])
 
         with gr.Tab("Enroll"):
