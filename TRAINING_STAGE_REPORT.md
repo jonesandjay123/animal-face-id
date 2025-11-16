@@ -55,3 +55,29 @@ python -m src.inference.predict \
   - Batch: 128 with AMP sized for ~16GB VRAM; workers 8 to keep the GPU fed.
   - LR: 5e-4 AdamW with cosine decay, weight_decay 0.01; 30 epochs as a trial before longer runs.
   - Checkpoint path: `artifacts/chimp-min10-resnet50-arcface_best.pt`.
+
+## Full run config (extended training)
+- File: `configs/train_chimp_min10_resnet50_arc_full.yaml`
+- Trial summary: 30-epoch ResNet50+ArcFace reached ~0.73 val top-1, stable training (100% GPU, no OOM).
+- Key hyperparameters:
+  - Backbone/head/loss: ResNet50 + ArcFace (margin 0.5, scale 30), cross-entropy on logits.
+  - Batch/loader: batch_size 128, num_workers 8, AMP enabled.
+  - Optimizer/scheduler: AdamW (lr 4e-4, weight_decay 0.01) with cosine schedule; grad_clip 1.0.
+  - Epochs: 120 for a full run to allow continued improvement beyond the 30-epoch trial.
+  - Outputs: checkpoints to `artifacts/chimp-min10-resnet50-arcface-full_best.pt` and `_full_last.pt`; metrics to `artifacts/chimp-min10-resnet50-arcface_full_metrics.csv`.
+- Why longer (120): the 30-epoch curve was still improving without overfitting signs, so extending to 120 epochs should let the cosine schedule anneal further and squeeze extra accuracy before saturation.
+- Command to launch (from repo root):
+```bash
+python -m src.training.train --config configs/train_chimp_min10_resnet50_arc_full.yaml
+```
+
+## Step A: Final Evaluation (test split, trained model)
+- Script: `tools/run_final_eval.py`
+- Purpose: run the trained checkpoint on the **test split**, produce metrics/plots/CSV/Markdown in `artifacts/final_eval/` and update `FINAL_EVAL_REPORT.md`.
+- Example:
+```bash
+python tools/run_final_eval.py \
+  --config configs/train_chimp_min10_resnet50_arc_full.yaml \
+  --ckpt artifacts/chimp-min10-resnet50-arcface_full_best.pt \
+  --device cuda
+```
