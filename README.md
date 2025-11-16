@@ -82,7 +82,7 @@ python -m src.training.train --config configs/train_chimp_min10_resnet50_arc_ful
 python -m src.inference.build_gallery --config configs/train_chimp_min10_resnet50_arc_full.yaml --device cuda
 
 # 2. Predict the ID of a new image
-python -m src.inference.predict --image /path/to/your/chimp_face.png --config configs/train_chimp_min10_resnet50_arc_full.yaml --device cpu
+ python -m src.inference.predict --image /path/to/your/chimp_face.png --config configs/train_chimp_min10_resnet50_arc_full.yaml --device cpu
 ```
 
 ### 4. Final Evaluation on Test Split
@@ -93,6 +93,12 @@ python tools/run_final_eval.py \
   --device cuda
 ```
 Outputs go to `artifacts/final_eval/` and `FINAL_EVAL_REPORT.md`.
+
+### 5. GUI (experimental)
+```bash
+python tools/chimp_gui_app.py
+```
+Default config/ckpt from above; uses index at `artifacts/index/chimp_index` if present. Identify tab shows model + gallery top-k; Enroll tab adds new individuals to the index.
 
 ---
 
