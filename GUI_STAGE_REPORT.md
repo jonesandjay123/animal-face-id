@@ -81,3 +81,8 @@ python tools/build_chimp_index_from_annotations.py \
 2. Build index from annotations (one command above).
 3. Launch GUI: `python tools/chimp_gui_app.py`
 4. Identify tab will auto-use the index if present; Enroll tab adds to the same index and saves it.
+
+## Open-set hinting (Milestone 1)
+- Identify shows “Open-set status” based on model top-1 confidence and gallery top-1 similarity.
+- Default thresholds (adjustable via sliders): model prob 0.5, gallery sim 0.75.
+- If either falls below threshold, the GUI warns “possibly a new individual”; you can reuse the last identified image in Enroll without re-upload.

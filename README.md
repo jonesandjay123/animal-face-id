@@ -218,6 +218,13 @@ python tools/build_chimp_index_from_annotations.py \
 - Auto-picks the min10 annotation, uses train+val as gallery (test held out), caps per-ID samples, batches embeddings with the full model.
 - Saves index to `artifacts/index/chimp_min10_auto_*` and entries CSV; GUI will auto-load this index if present.
 
+### 7. Open-set hinting in GUI
+- Identify tab shows an “Open-set status” using both model top-1 confidence and gallery top-1 similarity.
+- Default thresholds (adjustable via sliders): model prob 0.5, gallery sim 0.75. If either is below threshold, the GUI warns “possibly a new individual” and you can send the last identified image directly to Enroll without re-upload.
+- Example (GUI open-set warning):
+
+![GUI open-set demo](GUI-demo.png)
+
 ---
 
 ## Repository Structure

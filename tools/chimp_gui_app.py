@@ -26,12 +26,15 @@ DEFAULT_INDEX_CANDIDATES = [
     "artifacts/index/chimp_min10_auto",
     "artifacts/index/chimp_index",
 ]
+MODEL_PROB_THRESH = 0.5
+GALLERY_SIM_THRESH = 0.75
 
 
 class AppState:
     def __init__(self) -> None:
         self.model_bundle: Dict[str, Any] | None = None
         self.index: SimpleIndex | None = None
+        self.last_image_path: str | None = None
 
 
 STATE = AppState()
@@ -80,18 +83,20 @@ def init_model(config: str = DEFAULT_CONFIG, ckpt: str = DEFAULT_CKPT, device: s
     return msg
 
 
-def identify(image, topk: int):
+def identify(image, topk: int, model_thresh: float, gallery_thresh: float):
     """Identify a single uploaded face.
 
     Returns:
     - status string
-    - model_topk: list of dicts with rank, id, prob (model classifier top-k on logits/probs)
-    - gallery_topk: list of dicts with rank, id, similarity (gallery index cosine results)
+    - model_topk: list rows [rank, id, prob] (model classifier top-k on logits/probs)
+    - gallery_topk: list rows [rank, id, similarity] (gallery index cosine results)
+    - open_set_msg: string warning/info about confidence
+    - image_path: cached file path for reuse in Enroll
     """
     if STATE.model_bundle is None:
-        return "Model not loaded yet.", [], []
+        return "Model not loaded yet.", [], [], "Model not loaded", None
     if image is None:
-        return "Please upload an image.", [], []
+        return "Please upload an image.", [], [], "No image", None
 
     tmp_path = Path(".__tmp_upload.png")
     image.save(tmp_path)
@@ -116,7 +121,29 @@ def identify(image, topk: int):
         gallery_topk = [[i + 1, m["label"], float(m["score"])] for i, m in enumerate(matches)]
         status = "Done"
 
-    return status, model_topk, gallery_topk
+    top1_prob = result["topk_scores"][0] if result["topk_scores"] else 0.0
+    top1_sim = gallery_topk[0][2] if (STATE.index and STATE.index.size > 0 and gallery_topk) else None
+
+    # Open-set decision
+    open_set_flag = (top1_prob < model_thresh) or (top1_sim is not None and top1_sim < gallery_thresh)
+    sim_str = f"{top1_sim:.3f}" if top1_sim is not None else "N/A"
+    if open_set_flag:
+        open_set_msg = (
+            "⚠️ Possibly a new individual (open-set triggered)\n"
+            f"Model confidence: {top1_prob:.3f} (threshold: {model_thresh:.3f})\n"
+            f"Gallery similarity: {sim_str} (threshold: {gallery_thresh:.3f})"
+        )
+    else:
+        open_set_msg = (
+            "✓ Known individual (confidence above thresholds)\n"
+            f"Model confidence: {top1_prob:.3f}\n"
+            f"Gallery similarity: {sim_str}"
+        )
+
+    # Cache last image path for Enroll reuse
+    STATE.last_image_path = str(tmp_path)
+
+    return status, model_topk, gallery_topk, open_set_msg, str(tmp_path)
 
 
 def enroll(name: str, files: List[Any], aggregate: bool):
@@ -160,11 +187,19 @@ def build_interface():
         with gr.Tab("Identify"):
             img = gr.Image(type="pil", label="Cropped chimp face")
             topk_in = gr.Slider(1, 5, value=5, step=1, label="Top-k")
+            model_thresh_in = gr.Slider(0.0, 1.0, value=MODEL_PROB_THRESH, step=0.01, label="Model prob threshold")
+            gallery_thresh_in = gr.Slider(0.0, 1.0, value=GALLERY_SIM_THRESH, step=0.01, label="Gallery sim threshold")
             identify_btn = gr.Button("Identify")
             msg = gr.Textbox(label="Status")
-            clf_table = gr.Dataframe(headers=["rank", "id", "prob"], label="Model top-k", interactive=False, datatype=["number", "str", "number"])
+            open_set_box = gr.Textbox(label="Open-set status", interactive=False)
+            last_img_hidden = gr.Textbox(label="Last image path", interactive=False, visible=False)
             gallery_table = gr.Dataframe(headers=["rank", "id", "similarity"], label="Gallery (index) top-k", interactive=False, datatype=["number", "str", "number"])
-            identify_btn.click(identify, inputs=[img, topk_in], outputs=[msg, clf_table, gallery_table])
+            clf_table = gr.Dataframe(headers=["rank", "id", "prob"], label="Model top-k", interactive=False, datatype=["number", "str", "number"])
+            identify_btn.click(
+                identify,
+                inputs=[img, topk_in, model_thresh_in, gallery_thresh_in],
+                outputs=[msg, clf_table, gallery_table, open_set_box, last_img_hidden],
+            )
 
         with gr.Tab("Enroll"):
             name_in = gr.Textbox(label="New individual name/ID")
@@ -173,6 +208,9 @@ def build_interface():
             enroll_btn = gr.Button("Add to index")
             enroll_msg = gr.Textbox(label="Enroll status")
             enroll_count = gr.Number(label="Images added", precision=0)
+            # Button to reuse last identified image
+            reuse_btn = gr.Button("Use last identified image")
+            reuse_btn.click(lambda p: [p] if p else [], inputs=[last_img_hidden], outputs=[files_in])
             enroll_btn.click(enroll, inputs=[name_in, files_in, aggregate], outputs=[enroll_msg, enroll_count])
 
     return demo
