@@ -5,6 +5,7 @@ This repository contains a proof-of-concept pipeline for animal face identificat
 The current implementation focuses on identifying individual chimpanzees using the [Chimpanzee Faces](https://github.com/cvjena/chimpanzee_faces) dataset.
 
 ## Features
+
 - **End-to-End Workflow**: Covers the full pipeline from data preparation to training, evaluation, and inference.
 - **Configuration-Driven**: All experiments are controlled via simple YAML configuration files.
 - **High-Performance Models**: Includes configurations for ResNet backbones with ArcFace loss, a standard for face recognition tasks.
@@ -21,6 +22,7 @@ The current implementation focuses on identifying individual chimpanzees using t
 - **Result:** Best checkpoint: `artifacts/chimp-min10-resnet50-arcface-full_best.pt`. Ready for evaluation and inference.
 
 ## Dataset Notes (why “min10”)
+
 - `annotations_merged_all.txt`: 7,187 images, 102 IDs, includes classes with very few samples.
 - `annotations_merged_min10.txt`: 7,150 images, 87 IDs, every ID has ≥10 images.
 - We train/evaluate on **min10** to avoid extremely low-sample classes, improve class balance, and stabilize ArcFace training/eval. Use `annotations_merged_all.txt` only if you explicitly want the long-tail classes (expect more imbalance and weaker per-ID metrics).
@@ -34,6 +36,7 @@ This project involves several key deep learning concepts. For a detailed explana
 **➡️ [Conceptual Overview & FAQ](./docs/CONCEPTS.md)**
 
 This guide answers questions such as:
+
 - How does the model "remember" new faces without full retraining?
 - What is the difference between the GPU's role in training vs. the CPU's role in inference?
 - Why is this model a "chimpanzee expert" and what are its limitations?
@@ -44,12 +47,12 @@ This guide answers questions such as:
 
 This project is organized into a series of detailed guides. Start with setting up your environment and follow the steps in order.
 
-| # | Guide | Description |
-|---|---|---|
-| 1 | **[Environment Setup](./docs/SETUP.md)** | How to configure your Python environment on Windows, WSL, or macOS. |
-| 2 | **[Data Preparation](./docs/DATA_PREPARATION.md)** | How to download, validate, and prepare the dataset for training. |
-| 3 | **[Model Training](./docs/TRAINING.md)** | How to run the training script and understand the outputs. |
-| 4 | **[Evaluation and Inference](./docs/EVALUATION_AND_INFERENCE.md)** | How to evaluate your trained model and predict new images. |
+| #   | Guide                                                              | Description                                                         |
+| --- | ------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| 1   | **[Environment Setup](./docs/SETUP.md)**                           | How to configure your Python environment on Windows, WSL, or macOS. |
+| 2   | **[Data Preparation](./docs/DATA_PREPARATION.md)**                 | How to download, validate, and prepare the dataset for training.    |
+| 3   | **[Model Training](./docs/TRAINING.md)**                           | How to run the training script and understand the outputs.          |
+| 4   | **[Evaluation and Inference](./docs/EVALUATION_AND_INFERENCE.md)** | How to evaluate your trained model and predict new images.          |
 
 ---
 
@@ -60,11 +63,13 @@ This project is organized into a series of detailed guides. Start with setting u
 ### Step 1: Create a Virtual Environment
 
 **On Linux/macOS/WSL:**
+
 ```bash
 python3 -m venv .venv
 ```
 
 **On Windows (Command Prompt or PowerShell):**
+
 ```cmd
 python -m venv .venv
 ```
@@ -72,37 +77,45 @@ python -m venv .venv
 ### Step 2: Activate the Virtual Environment
 
 **On Linux/macOS/WSL:**
+
 ```bash
 source .venv/bin/activate
 ```
 
 **On Windows (Command Prompt):**
+
 ```cmd
 .venv\Scripts\activate.bat
 ```
 
 **On Windows (PowerShell):**
+
 ```powershell
 .venv\Scripts\Activate.ps1
 ```
 
 ### Step 3: Upgrade pip
+
 ```bash
 pip install --upgrade pip
 ```
 
 ### Step 4: Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### Step 5: Run the GUI Application
+
 ```bash
 python tools/chimp_gui_app.py
 ```
 
 ### Step 6: Open in Browser
+
 Open your browser and navigate to:
+
 ```
 http://127.0.0.1:7860
 ```
@@ -118,12 +131,15 @@ http://127.0.0.1:7860
 **Don't want to train from scratch?** You can get started faster by obtaining pre-prepared resources:
 
 ### Option A: Get Pre-trained Model (artifacts/)
+
 - **Contact Jones** to request the trained model artifacts ZIP file
 - Extract and overwrite the `artifacts/` directory
 - This includes the best checkpoint (`chimp-min10-resnet50-arcface-full_best.pt`) and gallery index
 
 ### Option B: Get Dataset (data/)
+
 You have two options for the chimpanzee dataset:
+
 1. **Download directly** from the official source: [cvjena/chimpanzee_faces](https://github.com/cvjena/chimpanzee_faces)
 2. **Contact Jones** to request the prepared dataset ZIP file for easier setup
 
@@ -136,7 +152,8 @@ After obtaining either or both, you can skip directly to evaluation/inference st
 Here is the complete sequence of commands to go from a fresh clone to making a prediction.
 
 ### 1. Setup and Data Prep
-*Ensure you have completed the steps in the [Environment Setup](./docs/SETUP.md) and [Data Preparation](./docs/DATA_PREPARATION.md) guides first.*
+
+_Ensure you have completed the steps in the [Environment Setup](./docs/SETUP.md) and [Data Preparation](./docs/DATA_PREPARATION.md) guides first._
 
 ```bash
 # Activate your virtual environment (e.g., on Linux/WSL/macOS)
@@ -150,7 +167,8 @@ python scripts/prepare_chimpanzee_splits.py
 ```
 
 ### 2. Train the Model
-*For details, see the [Model Training](./docs/TRAINING.md) guide.*
+
+_For details, see the [Model Training](./docs/TRAINING.md) guide._
 
 ```bash
 # Run a full training using the high-performance configuration
@@ -158,7 +176,8 @@ python -m src.training.train --config configs/train_chimp_min10_resnet50_arc_ful
 ```
 
 ### 3. Build Gallery and Predict
-*For details, see the [Evaluation and Inference](./docs/EVALUATION_AND_INFERENCE.md) guide.*
+
+_For details, see the [Evaluation and Inference](./docs/EVALUATION_AND_INFERENCE.md) guide._
 
 ```bash
 # 1. Build the k-NN gallery index from your trained model
@@ -169,27 +188,33 @@ python -m src.inference.build_gallery --config configs/train_chimp_min10_resnet5
 ```
 
 ### 4. Final Evaluation on Test Split
+
 ```bash
 python tools/run_final_eval.py \
   --config configs/train_chimp_min10_resnet50_arc_full.yaml \
   --ckpt artifacts/chimp-min10-resnet50-arcface-full_best.pt \
   --device cuda
 ```
+
 Outputs go to `artifacts/final_eval/` and `FINAL_EVAL_REPORT.md`.
 
 ### 5. GUI (experimental)
+
 ```bash
 python tools/chimp_gui_app.py
 ```
+
 Default config/ckpt from above; uses index at `artifacts/index/chimp_index` if present. Identify tab shows model + gallery top-k; Enroll tab adds new individuals to the index.
 
 ### 6. Auto-build gallery index from annotations
+
 ```bash
 python tools/build_chimp_index_from_annotations.py \
   --max-per-id 10 \
   --device cuda \
   --prefix artifacts/index/chimp_min10_auto
 ```
+
 - Auto-picks the min10 annotation, uses train+val as gallery (test held out), caps per-ID samples, batches embeddings with the full model.
 - Saves index to `artifacts/index/chimp_min10_auto_*` and entries CSV; GUI will auto-load this index if present.
 
@@ -218,3 +243,60 @@ python tools/build_chimp_index_from_annotations.py \
 ├── tools/                  # Standalone tools (e.g., final evaluation script)
 └── README.md               # This file
 ```
+
+---
+
+## 🧭 Roadmap / Next Steps
+
+### Open-Set Recognition
+
+**Currently Supported:**
+
+- ✅ **Known individual identification** (model top-k)
+- ✅ **Gallery nearest neighbor search** (index kNN)
+- ✅ **Enrolling new individuals** (Enroll tab)
+
+**Not Yet Supported:** Automatic detection of unknown individuals.
+
+### 🎯 Planned Feature: Open-Set Thresholding
+
+**New Capability: Automatic Unknown Detection**
+
+In the **Identify tab**, when the system detects a potentially unknown individual:
+
+**Trigger Conditions:**
+
+- Model top-1 probability < 0.5, OR
+- Gallery similarity < 0.6
+
+**GUI Behavior:**
+
+- Display a warning message:
+  ```
+  ⚠️ This face may not be in the database. Would you like to enroll it as a new individual?
+  ```
+- Provide an **"Enroll as new individual"** button
+  - Clicking redirects to the Enroll tab
+  - Automatically pre-loads the current image for quick registration
+
+### 🧩 Implementation Guide (for developers)
+
+**Primary File to Modify:**
+
+- `tools/chimp_gui_app.py` → Identify callback function
+  - Add threshold-based logic
+  - Add new UX section to display warning and button
+
+**Required Modules:**
+
+- `src/inference/inference_core.py`
+  - Use `embed()` to get embedding
+  - Use `predict()` to get logits and top-1 probability
+- `src/inference/index_store.py`
+  - Use `query()` to get gallery similarity
+
+**Implementation Notes:**
+
+- Set reasonable threshold parameters (consider adding to config or GUI slider)
+- Ensure smooth UX: state passing, automatic image transfer
+- Preserve existing functionality; only add new warning logic
