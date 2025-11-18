@@ -26,6 +26,8 @@ DEFAULT_INDEX_CANDIDATES = [
     "artifacts/index/chimp_min10_auto",
     "artifacts/index/chimp_index",
 ]
+# Preferred save location (falls back to first candidate)
+DEFAULT_INDEX_SAVE_PREFIX = DEFAULT_INDEX_CANDIDATES[0]
 MODEL_PROB_THRESH = 0.5
 GALLERY_SIM_THRESH = 0.75
 
@@ -35,6 +37,7 @@ class AppState:
         self.model_bundle: Dict[str, Any] | None = None
         self.index: SimpleIndex | None = None
         self.last_image_path: str | None = None
+        self.index_prefix: str | None = None
 
 
 STATE = AppState()
@@ -74,6 +77,7 @@ def init_model(config: str = DEFAULT_CONFIG, ckpt: str = DEFAULT_CKPT, device: s
     STATE.model_bundle = load_model_from_config(config, ckpt, device=device)
     prefix = _find_existing_index()
     STATE.index = _load_index(prefix)
+    STATE.index_prefix = prefix if prefix else DEFAULT_INDEX_SAVE_PREFIX
     msg = f"Model loaded from {ckpt} on {STATE.model_bundle['device']}. "
     if STATE.index and STATE.index.size > 0:
         unique_ids = len(set(STATE.index.labels))
@@ -167,8 +171,9 @@ def enroll(name: str, files: List[Any], aggregate: bool):
     paths = [p for p in paths if p]
 
     add_individual(STATE.model_bundle, STATE.index, name, paths, aggregate=aggregate)
-    STATE.index.save(DEFAULT_INDEX_PREFIX)
-    return f"Added {len(paths)} images under '{name}'. Index size: {STATE.index.size}", len(paths)
+    save_prefix = STATE.index_prefix or DEFAULT_INDEX_SAVE_PREFIX
+    STATE.index.save(save_prefix)
+    return f"Added {len(paths)} images under '{name}'. Index size: {STATE.index.size}. Saved to {save_prefix}_*.npy/json", len(paths)
 
 
 def build_interface():

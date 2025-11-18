@@ -1,8 +1,35 @@
+🌐 Languages:  
+[English](./README.md) | [繁體中文](./README_zh-Hant.md)
+
 # Animal Face Identification
 
 This repository contains a proof-of-concept pipeline for animal face identification using PyTorch. It is designed for closed-set identification (recognizing known individuals) and is built with components to support future open-set and enrollment workflows.
 
 The current implementation focuses on identifying individual chimpanzees using the [Chimpanzee Faces](https://github.com/cvjena/chimpanzee_faces) dataset.
+
+## GUI Overview
+
+Here is a quick visual guide to the GUI application (`tools/chimp_gui_app.py`).
+
+### 1. Initial View
+The initial interface before loading a model. It shows the configuration path, checkpoint path, device selector (CUDA/CPU), and the empty "Identify" tab with its drag-and-drop upload area.
+
+![Initial GUI before loading a model](./GUI-demo1.png)
+
+### 2. Enroll a New Individual
+The "Enroll" workflow allows a user to add a new individual to the recognition index. The user provides a name/ID, uploads one or more cropped face images, and clicks "Add to index." The index is updated and saved automatically.
+
+![Enroll workflow: add a new individual into the index](./GUI-demo2.png)
+
+### 3. Identify a Known Individual
+This shows a result for a known individual. Both the model's confidence and the gallery similarity score exceed their respective thresholds. The system returns "Known individual (confidence above thresholds)" and lists the top matching candidates from the gallery.
+
+![Identify result: known individual with high confidence](./GUI-demo3.png)
+
+### 4. Identify an Unknown Individual (Open-Set)
+This shows a result for a new or unknown individual. Although the model's classification confidence is high, the similarity to the closest face in the gallery is below the threshold (e.g., < 0.75). This triggers the open-set logic, and the system displays "Possibly a new individual (open-set triggered)."
+
+![Identify result: open-set triggered for a new individual](./GUI-demo4.png)
 
 ## Features
 
@@ -221,9 +248,7 @@ python tools/build_chimp_index_from_annotations.py \
 ### 7. Open-set hinting in GUI
 - Identify tab shows an “Open-set status” using both model top-1 confidence and gallery top-1 similarity.
 - Default thresholds (adjustable via sliders): model prob 0.5, gallery sim 0.75. If either is below threshold, the GUI warns “possibly a new individual” and you can send the last identified image directly to Enroll without re-upload.
-- Example (GUI open-set warning):
 
-![GUI open-set demo](GUI-demo.png)
 
 ---
 
@@ -262,48 +287,10 @@ python tools/build_chimp_index_from_annotations.py \
 - ✅ **Known individual identification** (model top-k)
 - ✅ **Gallery nearest neighbor search** (index kNN)
 - ✅ **Enrolling new individuals** (Enroll tab)
+- ✅ **Open-set hinting** (Identify tab warns when model prob < 0.5 or gallery sim < 0.75; can send last image to Enroll)
 
-**Not Yet Supported:** Automatic detection of unknown individuals.
+**Not Yet Supported:** Face detection / cropping before ID (current GUI assumes pre-cropped faces).
 
-### 🎯 Planned Feature: Open-Set Thresholding
-
-**New Capability: Automatic Unknown Detection**
-
-In the **Identify tab**, when the system detects a potentially unknown individual:
-
-**Trigger Conditions:**
-
-- Model top-1 probability < 0.5, OR
-- Gallery similarity < 0.6
-
-**GUI Behavior:**
-
-- Display a warning message:
-  ```
-  ⚠️ This face may not be in the database. Would you like to enroll it as a new individual?
-  ```
-- Provide an **"Enroll as new individual"** button
-  - Clicking redirects to the Enroll tab
-  - Automatically pre-loads the current image for quick registration
-
-### 🧩 Implementation Guide (for developers)
-
-**Primary File to Modify:**
-
-- `tools/chimp_gui_app.py` → Identify callback function
-  - Add threshold-based logic
-  - Add new UX section to display warning and button
-
-**Required Modules:**
-
-- `src/inference/inference_core.py`
-  - Use `embed()` to get embedding
-  - Use `predict()` to get logits and top-1 probability
-- `src/inference/index_store.py`
-  - Use `query()` to get gallery similarity
-
-**Implementation Notes:**
-
-- Set reasonable threshold parameters (consider adding to config or GUI slider)
-- Ensure smooth UX: state passing, automatic image transfer
-- Preserve existing functionality; only add new warning logic
+### 🎯 Next Milestones
+- **Face detection + crop before ID (high priority):** Add a detector stage (e.g., RetinaFace) so the pipeline handles real-world photos (trap cams, zoo CCTV, researcher shots) by auto-finding faces, then reusing the existing embedding + index stack.
+- **Optional:** More advanced open-set (calibration, logging, “ambiguous” buffer/review flows) building on the current M1 open-set hinting.
